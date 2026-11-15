@@ -135,6 +135,7 @@ export function createInitialState(): GameState {
       prompt: null,
       dialogue: [],
       toasts: [],
+      missionTick: null,
       cinematic: null,
       waypointOverride: null,
       paused: false,
@@ -178,7 +179,6 @@ const spokenKeys = new Set<string>();
 export interface SayOptions {
   tone?: DialogueTone;
   speaker?: string;
-  science?: string;
   /** When given, the same key will never be queued twice. */
   key?: string;
   /** Put this message at the front of the queue. */
@@ -196,16 +196,30 @@ export function say(lines: string[], opts: SayOptions = {}) {
     speaker: opts.speaker ?? 'ARES NAV',
     lines,
     tone: opts.tone ?? ('normal' as DialogueTone),
-    science: opts.science,
   };
   setUI({
     dialogue: opts.urgent
       ? [message, ...state.ui.dialogue]
       : [...state.ui.dialogue, message],
+    // A warning should not have to wait behind "Can filled".
+    toasts: message.tone === 'alert' ? [] : state.ui.toasts,
   });
+  logLines(message.id, message.speaker, lines);
+}
 
-  const entry = { id: message.id, speaker: message.speaker, lines, sol: state.sol };
+function logLines(id: number, speaker: string, lines: string[]) {
+  const entry = { id, speaker, lines, sol: state.sol };
   setState({ dialogueLog: [...state.dialogueLog.slice(-59), entry] });
+}
+
+/**
+ * Files something in the radio log without putting it on screen. Stored
+ * messages from home arrive this way: they wait in the log until the player
+ * has a quiet minute to read them.
+ */
+export function fileInLog(speaker: string, lines: string[]) {
+  logLines(dialogueId++, speaker, lines);
+  setFlag('logUnread');
 }
 
 export function advanceDialogue() {
@@ -217,13 +231,35 @@ export function clearDialogue() {
   setUI({ dialogue: [] });
 }
 
-export function resetSpokenKeys() {
-  spokenKeys.clear();
+/* ============================================================
+   One thing on screen at a time
+   ============================================================ */
+/** True while a message is already up and anything new should wait its turn. */
+export function hudBusy(s: GameState = state) {
+  return s.ui.missionTick !== null || s.ui.toasts.length > 0 || s.ui.dialogue.length > 0;
 }
 
-/** Marks a line as already delivered, so it is not repeated when it comes round. */
-export function markSpoken(key: string) {
-  spokenKeys.add(key);
+const TICK_MS = 1700;
+let tickId = 1;
+
+/**
+ * The whole of the "mission complete" moment: a green tick, and nothing
+ * else. Whatever was on screen makes way for it, apart from a live warning.
+ */
+export function showMissionTick() {
+  const id = tickId++;
+  setUI({
+    missionTick: id,
+    toasts: [],
+    dialogue: state.ui.dialogue.filter((d) => d.tone === 'alert'),
+  });
+  window.setTimeout(() => {
+    if (state.ui.missionTick === id) setUI({ missionTick: null });
+  }, TICK_MS);
+}
+
+export function resetSpokenKeys() {
+  spokenKeys.clear();
 }
 
 /* ============================================================
@@ -261,14 +297,12 @@ export function toast(opts: {
 /* ============================================================
    Science log
    ============================================================ */
-export function learn(id: string, title: string, body: string, announce = false) {
+/** Adds an entry to the science log. Quietly: it is there when the player looks. */
+export function learn(id: string, title: string, body: string) {
   if (!body) return;
   if (state.codex.some((c) => c.id === id)) return;
   const entry: CodexEntry = { id, title, body, sol: state.sol };
   setState({ codex: [...state.codex, entry] });
-  if (announce) {
-    toast({ kind: 'science', title: 'Science log updated', text: title, ttl: 4600 });
-  }
 }
 
 /* ============================================================
@@ -279,6 +313,7 @@ export function openPanel(panel: PanelId) {
   setUI({ panel, paused: panel === 'pause' });
   if (panel === 'inventory') setFlag('tutInventory');
   if (panel === 'map') setFlag('tutMap');
+  if (panel === 'log') setFlag('logUnread', false);
 }
 
 export function closePanel() {

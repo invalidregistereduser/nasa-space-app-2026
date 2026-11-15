@@ -5,7 +5,7 @@ import { InteractPrompt } from './InteractPrompt';
 import { Toasts } from './Toasts';
 import { TouchControls } from './TouchControls';
 import { TutorialHints } from './TutorialHints';
-import { MissionBanner } from './MissionBanner';
+import { MissionTick } from './MissionTick';
 import { CollectFx } from './CollectFx';
 import { SaveIndicator } from './SaveIndicator';
 import { Minimap } from './Minimap';
@@ -33,7 +33,7 @@ export function HUD() {
     >
       {!indoors && <WaypointArrow />}
       <CollectFx />
-      <MissionBanner />
+      <MissionTick />
       <ThoughtBubble />
       <BedCard />
 

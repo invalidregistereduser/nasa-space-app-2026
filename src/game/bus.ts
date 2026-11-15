@@ -24,7 +24,6 @@ export type BusEvents = {
   'nav:waypoint': { id: string | null };
   'ui:interact': void;
   'ui:panel': { panel: string };
-  'ui:mission-complete': { code: string; title: string };
   'ui:collect-fx': { icon: string; screenX: number; screenY: number };
   'ui:saving': void;
   'time:sol': { sol: number };

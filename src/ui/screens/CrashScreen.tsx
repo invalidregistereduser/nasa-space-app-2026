@@ -3,20 +3,23 @@ import { Starfield } from '../canvas/Starfield';
 import { useTypewriter } from '../components/Typewriter';
 import { audio, sfx } from '../../audio/AudioEngine';
 import { beginPlaying } from '../../state/gameplay';
-import { useGame } from '../../state/store';
+import { useCoarsePointer } from '../hud/useCoarsePointer';
 
 const clamp = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * clamp(t);
 /** Normalised progress of a window in the timeline. */
 const span = (t: number, from: number, to: number) => clamp((t - from) / (to - from));
 
-const END = 13200;
+/** The screen is fully black by now, and the timeline has nothing left to do. */
+const WAKE_AT = 10100;
 
 export function CrashScreen() {
-  const state = useGame();
   const [t, setT] = useState(0);
   const finished = useRef(false);
   const cues = useRef(new Set<string>());
+  /** Added to the clock when the player skips ahead. */
+  const jump = useRef(0);
+  const waiting = t >= WAKE_AT;
 
   useEffect(() => {
     audio.unlock();
@@ -24,23 +27,44 @@ export function CrashScreen() {
     let raf = 0;
     const start = performance.now();
     const loop = (now: number) => {
-      const elapsed = now - start;
-      setT(elapsed);
-      if (elapsed >= END && !finished.current) {
-        finished.current = true;
-        beginPlaying();
+      const elapsed = now - start + jump.current;
+      if (elapsed >= WAKE_AT) {
+        // Nothing moves from here on. The game waits for the player.
+        setT(WAKE_AT);
         return;
       }
+      setT(elapsed);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // Audio cues.
+  const wake = () => {
+    if (finished.current) return;
+    finished.current = true;
+    sfx('ui_click');
+    beginPlaying();
+  };
+
+  // The run starts when the player says so: Enter or Space, nothing sooner.
+  useEffect(() => {
+    if (!waiting) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      wake();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waiting]);
+
+  // Audio cues. None of them belong to the silence after the crash, so a
+  // skip straight to the wake-up does not set them all off at once.
   useEffect(() => {
     const fire = (key: string, at: number, fn: () => void) => {
-      if (t >= at && !cues.current.has(key)) {
+      if (t >= at && t < WAKE_AT && !cues.current.has(key)) {
         cues.current.add(key);
         fn();
       }
@@ -53,11 +77,11 @@ export function CrashScreen() {
     fire('impact', 9100, () => sfx('rumble'));
   }, [t]);
 
+  /** Skips the descent, not the wake-up. */
   const skip = () => {
-    if (finished.current) return;
-    finished.current = true;
+    if (waiting) return;
     sfx('ui_click');
-    beginPlaying();
+    jump.current += WAKE_AT - t;
   };
 
   /* ---- Animated values ---- */
@@ -215,7 +239,10 @@ export function CrashScreen() {
       )}
 
       {/* HUD captions */}
-      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-8 md:p-12">
+      <div
+        className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-8 md:p-12"
+        style={{ opacity: 1 - blackout }}
+      >
         <div
           className="flex items-start justify-between font-mono text-[11px] uppercase tracking-[0.25em]"
           style={{ textShadow: '0 1px 8px rgba(0,0,0,0.9)' }}
@@ -275,13 +302,9 @@ export function CrashScreen() {
         style={{ opacity: blackout }}
       />
 
-      {t > 10100 && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center px-8">
-          <SolLine name={state.playerName} />
-        </div>
-      )}
+      {waiting && <WakePrompt onWake={wake} />}
 
-      {!finished.current && (
+      {!waiting && (
         <button
           className="absolute bottom-8 right-8 z-30 font-mono text-[11px] uppercase tracking-[0.25em] text-slate-500 transition hover:text-nav-300"
           onClick={skip}
@@ -293,28 +316,36 @@ export function CrashScreen() {
   );
 }
 
-function SolLine({ name }: { name: string }) {
-  const first = useTypewriter('Sol 1. Communication with Earth has been lost.', {
-    speed: 52,
-    startDelay: 200,
-  });
-  const second = useTypewriter(`${name}, wake up.`, {
-    speed: 60,
-    startDelay: 400,
-    enabled: first.done,
-  });
+/**
+ * One line on a black screen, and then the game does nothing at all until the
+ * player presses Enter or Space. A phone has neither, so there a tap does it.
+ */
+function WakePrompt({ onWake }: { onWake: () => void }) {
+  const touch = useCoarsePointer();
+  const line = useTypewriter('Wake up, astronaut.', { speed: 62, startDelay: 500 });
+
   return (
-    <div className="text-center">
-      <p className="font-display text-xl text-slate-200 sm:text-2xl">
-        {first.shown}
-        {!first.done && <span className="animate-caret text-nav-300">▌</span>}
+    <div
+      className="absolute inset-0 z-20 flex flex-col items-center justify-center px-8 text-center"
+      onClick={touch ? onWake : undefined}
+    >
+      <p className="font-display text-2xl text-slate-100 sm:text-3xl">
+        {line.shown}
+        {!line.done && <span className="animate-caret text-nav-300">▌</span>}
       </p>
-      {first.done && (
-        <p className="mt-6 font-display text-lg text-mars-300 sm:text-xl">
-          {second.shown}
-          {!second.done && <span className="animate-caret text-mars-300">▌</span>}
-        </p>
-      )}
+      <p
+        className={`mt-8 flex items-center gap-2 text-[13px] text-slate-500 transition-opacity duration-700 ${
+          line.done ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        {touch ? (
+          'Tap to wake up'
+        ) : (
+          <>
+            Press <kbd className="keycap">Enter</kbd> or <kbd className="keycap">Space</kbd>
+          </>
+        )}
+      </p>
     </div>
   );
 }

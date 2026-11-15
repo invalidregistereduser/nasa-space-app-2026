@@ -3,15 +3,18 @@ import { Icon } from '../components/Icon';
 import { closePanel, useGame } from '../../state/store';
 import { fmt } from '../../util/text';
 
-/** Everything ARES NAV has said so far, in case a line scrolled by too fast. */
+/**
+ * Everything ARES NAV has said so far, in case a line went by too fast, and
+ * the stored messages from home, which only ever show up here.
+ */
 export function LogPanel() {
   const state = useGame();
   const entries = [...state.dialogueLog].reverse();
 
   return (
     <PanelShell
-      title="Dialogue log"
-      subtitle={`${state.dialogueLog.length} transmissions recorded`}
+      title="Radio log"
+      subtitle={`${state.dialogueLog.length} ${state.dialogueLog.length === 1 ? 'entry' : 'entries'}`}
       icon="radio"
       size="md"
       onClose={closePanel}

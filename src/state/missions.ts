@@ -38,7 +38,6 @@ export const MISSIONS: MissionDef[] = [
     hint: 'WASD or the arrow keys walk. SHIFT runs, and burns oxygen faster.',
     waypoint: null,
     isComplete: (s) => !!s.flags.hasMoved,
-    done: ['Good. Watch your oxygen — bottom left.'],
     science: 'A Martian day — a sol — lasts 24 hours, 39 minutes and 35 seconds.',
   },
   {
@@ -50,7 +49,6 @@ export const MISSIONS: MissionDef[] = [
     hint: 'Follow the arrow. Walking onto it picks it up.',
     waypoint: 'supply_box',
     isComplete: (s) => !!s.collected.supply_box,
-    done: ['Canisters, rations, a repair kit. Time bought, not a future.'],
   },
   {
     id: 'm_rover',
@@ -61,7 +59,6 @@ export const MISSIONS: MissionDef[] = [
     hint: 'North-west. Press E at the rover.',
     waypoint: 'rover_station',
     isComplete: (s) => !!s.flags.roverSurveyed,
-    done: ['Debris field plotted. Six parts intact — that is a greenhouse.'],
     science: "Mars' gravity is 38% of Earth's, so a crate that weighed 100 kg on the launch pad handles like 38 kg here.",
   },
   {
@@ -75,7 +72,6 @@ export const MISSIONS: MissionDef[] = [
     waypointOf: nearestMissingComponent,
     progressOf: (s) => ({ have: componentsHeld(s), need: 6 }),
     isComplete: (s) => componentsHeld(s) === 6,
-    done: ['All six. Now pick where the food lives.'],
   },
   {
     id: 'm_site',
@@ -86,7 +82,6 @@ export const MISSIONS: MissionDef[] = [
     hint: 'Stand on a glowing pad and press E.',
     waypoint: 'build_flats',
     isComplete: (s) => s.greenhouse.siteId !== null,
-    done: ['Site logged.'],
   },
   {
     id: 'm_build',
@@ -97,7 +92,6 @@ export const MISSIONS: MissionDef[] = [
     hint: 'Back to your pad, press E. You carry everything it needs.',
     waypointOf: (s) => s.greenhouse.siteId,
     isComplete: (s) => s.greenhouse.built,
-    done: ['Sealed. 0.98 bar. The first greenhouse on Mars, {name}.'],
     science:
       'A pressurised habitat must hold about one bar against near-vacuum outside — a load comparable to 10 metres of water pressing outward.',
   },
@@ -111,7 +105,6 @@ export const MISSIONS: MissionDef[] = [
     waypointOf: (s) => s.greenhouse.siteId,
     isComplete: (s) =>
       s.greenhouse.power && s.greenhouse.waterConnected && s.greenhouse.containersReady,
-    done: ['Power, water, soil. The module is alive.'],
     science:
       'Martian regolith contains perchlorate salts that are toxic to humans, so growth media must be washed or manufactured before planting.',
   },
@@ -124,7 +117,6 @@ export const MISSIONS: MissionDef[] = [
     hint: 'E at the shelf for a tin, then E at a bed.',
     waypointOf: (s) => s.greenhouse.siteId,
     isComplete: (s) => s.greenhouse.slots.some((sl) => sl.crop !== null),
-    done: ['Planted. Now water, light and patience.'],
   },
   {
     id: 'm_grow',
@@ -143,7 +135,6 @@ export const MISSIONS: MissionDef[] = [
       need: 100,
     }),
     isComplete: (s) => s.greenhouse.slots.some((sl) => sl.ready),
-    done: ['It is ripe.'],
   },
   {
     id: 'm_harvest',
@@ -154,7 +145,6 @@ export const MISSIONS: MissionDef[] = [
     hint: 'Step inside the greenhouse and press E at the finished bed.',
     waypointOf: (s) => s.greenhouse.siteId,
     isComplete: (s) => s.greenhouse.harvests >= 1,
-    done: ['Food is a cycle now, not a countdown. That changes everything.'],
     science:
       'In 2015 the ISS crew ate red romaine lettuce from the Veggie chamber — the first food ever harvested and eaten in space.',
   },
@@ -167,7 +157,6 @@ export const MISSIONS: MissionDef[] = [
     hint: 'North-east, a long way. Take a spare canister.',
     waypoint: 'antenna_dish',
     isComplete: (s) => have(s, 'comm_antenna'),
-    done: ['Reflector intact. Carry it home.'],
   },
   {
     id: 'm_transmit',
@@ -178,7 +167,6 @@ export const MISSIONS: MissionDef[] = [
     hint: 'Back to the crash site. Press E at the mast.',
     waypoint: 'transmitter',
     isComplete: (s) => !!s.flags.transmitted,
-    done: [],
     science:
       'A radio signal needs between 5 and 20 minutes to cross from Mars to Earth, so every conversation is a message left, not a call made.',
   },

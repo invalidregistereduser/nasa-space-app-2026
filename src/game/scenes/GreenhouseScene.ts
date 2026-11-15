@@ -18,6 +18,7 @@ import {
 import { transient } from '../../state/transient';
 import { live } from '../../state/live';
 import { tickWorld } from '../../state/gameplay';
+import { think } from '../../state/thoughts';
 import { audio, sfx } from '../../audio/AudioEngine';
 
 const ROOM = { width: 1840, height: 1260 };
@@ -483,24 +484,25 @@ export class GreenhouseScene extends Phaser.Scene {
 
     const gh = getState().greenhouse;
     if (!gh.visited) {
+      // First time in, ARES does the talking. The astronaut's own thoughts
+      // wait for a later visit.
       setState({ greenhouse: { ...gh, visited: true } });
       say(
         [
           'Pressure is good. You can take the helmet off in here, {name}.',
-          'Power first, then water, then the beds. I will keep an eye on the numbers.',
+          'Power first, then water, then the beds.',
         ],
         { key: 'gh-first-entry' },
       );
+      return;
     }
-    const lines = gh.visited
-      ? [
-          'Warm in here. Smells like soil and rain.',
-          'Helmet off. Four breaths of air that is mine.',
-          'Quietest room on the planet.',
-          'The lamps hum. It almost sounds like a kitchen.',
-        ]
-      : ['Warm in here. Smells like soil and rain.'];
-    bus.emit('ui:thought', { text: lines[Math.floor(Math.random() * lines.length)] });
+    const lines = [
+      'Warm in here. Smells like soil and rain.',
+      'Helmet off. Four breaths of air that is mine.',
+      'Quietest room on the planet.',
+      'The lamps hum. It almost sounds like a kitchen.',
+    ];
+    think(lines[Math.floor(Math.random() * lines.length)]);
   }
 
   private onWake = () => {

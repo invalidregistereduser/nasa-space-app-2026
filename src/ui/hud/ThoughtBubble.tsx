@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { bus } from '../../game/bus';
 import { live } from '../../state/live';
+import { hudBusy, useGame } from '../../state/store';
 
 interface Bubble {
   id: number;
@@ -12,6 +13,12 @@ interface Bubble {
 /** A passing thought, floating just above the astronaut. */
 export function ThoughtBubble() {
   const [bubble, setBubble] = useState<Bubble | null>(null);
+  const busy = hudBusy(useGame());
+
+  // A thought gives way the moment anything else needs the screen.
+  useEffect(() => {
+    if (busy) setBubble(null);
+  }, [busy]);
 
   useEffect(() => {
     let counter = 0;
@@ -33,7 +40,7 @@ export function ThoughtBubble() {
     };
   }, []);
 
-  if (!bubble) return null;
+  if (!bubble || busy) return null;
 
   const x = Math.min(Math.max(bubble.x, 180), window.innerWidth - 180);
   const y = Math.min(Math.max(bubble.y - 90, 110), window.innerHeight - 160);
