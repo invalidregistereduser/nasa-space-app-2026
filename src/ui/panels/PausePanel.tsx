@@ -1,7 +1,7 @@
 import { PanelShell } from '../components/PanelShell';
 import { Icon } from '../components/Icon';
 import { closePanel, openPanel, setPhase, useGame } from '../../state/store';
-import { saveGame } from '../../state/save';
+import { saveGame, setSaveProgress } from '../../state/save';
 import { audio, sfx } from '../../audio/AudioEngine';
 import { MISSIONS } from '../../state/missions';
 import { destroyGame } from '../../game/PhaserGame';
@@ -21,6 +21,7 @@ const CONTROLS: [string, string][] = [
 export function PausePanel() {
   const state = useGame();
   const mission = MISSIONS[state.missionIndex];
+  const saving = state.settings.saveProgress;
 
   const quit = () => {
     sfx('ui_close');
@@ -70,19 +71,23 @@ export function PausePanel() {
             className="btn w-full py-2.5 text-[11px]"
             onClick={() => {
               sfx('ui_click');
-              saveGame();
+              // Asking to save is the player opting in; from here the run
+              // keeps itself up to date on its own.
+              setSaveProgress(true);
             }}
           >
             <span className="flex items-center justify-center gap-2">
               <Icon name="save" className="h-3.5 w-3.5" />
-              Save now
+              {saving ? 'Save now' : 'Save this run'}
             </span>
           </button>
           <button className="btn w-full py-2.5 text-[11px]" onClick={quit}>
-            Save &amp; return to title
+            {saving ? 'Save & return to title' : 'Return to title'}
           </button>
-          <p className="pt-1 text-center text-[10.5px] text-slate-500">
-            Progress also saves automatically.
+          <p className="pt-1 text-center text-[10.5px] leading-relaxed text-slate-500">
+            {saving
+              ? 'This run also saves itself as you play.'
+              : 'Nothing is being saved. Leaving now loses this run.'}
           </p>
         </div>
 

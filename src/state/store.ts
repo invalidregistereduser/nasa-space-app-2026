@@ -126,7 +126,8 @@ export function createInitialState(): GameState {
       textSpeed: 'normal',
       uiScale: 1,
       colorblind: false,
-      saveProgress: true,
+      // Opt-in: nothing is written to the player's browser until they say so.
+      saveProgress: false,
     },
 
     ui: {

@@ -1,8 +1,8 @@
 {
-  "name": "nasa-last-mission",
+  "name": "mars-the-last-signal",
   "private": true,
   "version": "1.0.0",
-  "description": "NASA LAST MISSION - a Mars survival game built for the NASA Space Apps Challenge",
+  "description": "MARS: THE LAST SIGNAL - a 2D Mars survival game that runs in the browser",
   "type": "module",
   "scripts": {
     "dev": "vite",

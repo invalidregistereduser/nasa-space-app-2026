@@ -8,7 +8,7 @@ import { GameScreen } from './ui/screens/GameScreen';
 import { EndingScreen } from './ui/screens/EndingScreen';
 import { SettingsPanel } from './ui/panels/SettingsPanel';
 import { audio } from './audio/AudioEngine';
-import { loadSettings } from './state/save';
+import { hasSave, loadSettings } from './state/save';
 import { setSettings, useGame } from './state/store';
 
 export default function App() {
@@ -17,7 +17,11 @@ export default function App() {
   // Restore saved audio/accessibility preferences once.
   useEffect(() => {
     const saved = loadSettings();
-    if (saved) setSettings(saved);
+    // Progress saving is off until the player asks for it. A browser that
+    // already holds a run from an earlier session has asked before, so that
+    // run keeps saving instead of silently going stale.
+    const saveProgress = saved?.saveProgress ?? hasSave();
+    setSettings({ ...saved, saveProgress });
     const mix = { ...state.settings, ...(saved ?? {}) };
     audio.setMix({ master: mix.master, music: mix.music, sfx: mix.sfx });
     // eslint-disable-next-line react-hooks/exhaustive-deps

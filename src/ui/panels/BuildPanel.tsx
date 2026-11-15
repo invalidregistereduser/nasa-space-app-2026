@@ -212,7 +212,7 @@ function Transmitter() {
             {ready ? 'All parts present. Ready to broadcast.' : 'Recover the missing parts first.'}
           </p>
           <button
-            className="btn btn-mars btn-sheen py-2 text-[11px]"
+            className="btn btn-mars py-2 text-[11px]"
             disabled={!ready}
             onClick={() => {
               sfx('ui_click');

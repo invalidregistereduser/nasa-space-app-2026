@@ -6,11 +6,10 @@ import { sfx } from '../../audio/AudioEngine';
 import { setPhase } from '../../state/store';
 
 const LINES = [
-  'Year 2041...',
-  'After years of preparation, humanity launched another mission toward Mars.',
-  'Your spacecraft has travelled millions of kilometres across the dark.',
+  '2041.',
+  'After seven months in the dark, ARES HORIZON-7 reaches Mars.',
   'Six crew. One outpost. The first serious attempt to live off this world.',
-  'But something is about to go terribly wrong.',
+  'Entry interface in four minutes.',
 ];
 
 export function IntroScreen() {
@@ -49,7 +48,8 @@ export function IntroScreen() {
       <Starfield warp={0.1} marsSize={0.1} marsX={0.82} marsY={0.22} />
       <div className="vignette pointer-events-none absolute inset-0" />
 
-      <div className="relative z-10 flex h-full flex-col items-center justify-center px-8">
+      <div className="absolute inset-0 z-10 overflow-y-auto overflow-x-hidden">
+        <div className="flex min-h-full flex-col items-center justify-center px-8 py-16">
         <div className="w-full max-w-3xl">
           <p className="label mb-6 text-nav-300/60">
             Transmission log · {String(index + 1).padStart(2, '0')} /{' '}
@@ -80,10 +80,11 @@ export function IntroScreen() {
             )}
           </div>
         </div>
+        </div>
       </div>
 
       <button
-        className="absolute bottom-8 right-8 z-10 font-mono text-[11px] uppercase tracking-[0.25em] text-slate-500 transition hover:text-nav-300"
+        className="absolute bottom-8 right-8 z-20 font-mono text-[11px] uppercase tracking-[0.25em] text-slate-500 transition hover:text-nav-300"
         onClick={(e) => {
           e.stopPropagation();
           sfx('ui_click');

@@ -255,7 +255,7 @@ export function CrashScreen() {
             </p>
             {critical && (
               <p className="mt-2.5 font-mono text-[11px] uppercase tracking-[0.3em] text-alert-500">
-                ⚠ Automated landing abort · manual control lost
+                Automated landing abort · manual control lost
               </p>
             )}
           </div>

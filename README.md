@@ -26,8 +26,6 @@ no sprite sheets and no audio files anywhere in this repository.
 - [Controls](#controls)
 - [Playing the demo](#playing-the-demo-10-15-minutes)
 - [Inside the greenhouse](#inside-the-greenhouse)
-- [What changed in the latest pass](#what-changed-in-the-latest-pass)
-- [What changed in the polish pass](#what-changed-in-the-polish-pass)
 - [Features](#features)
 - [Educational content](#educational-content)
 - [Technology](#technology)
@@ -165,57 +163,6 @@ it was when you step back out.
 
 ---
 
-## What changed in the latest pass
-
-- **A minimal HUD.** Four corners, nothing else: menu, mission chip, oxygen, map. The identity
-  card, the action bar, the corner brackets, the neon glass and the gradient borders are gone —
-  flat surfaces, one border, one shadow.
-- **Silent pickups.** Walk onto a component and it is yours. No prompt, no press, no toast.
-- **Rough ground the truck cannot cross**, so the canyon, the crater field and the climb to the
-  ridge are still walks. The truck halts at the edge and tells you once.
-- **A drivable truck.** Repair the survey rover and drive it: twice walking pace, dust kicking up
-  behind the wheels, and a pressurised cab that nearly stops your oxygen draining. It stays parked
-  where you leave it.
-- **A much quieter screen.** Only oxygen is permanently on the HUD; water, nutrition and power
-  appear when they drop into warning. The identity card is gone, the mission card is a third
-  smaller, and the map screen lost its clickable waypoint system, its region table and most of its
-  legend — it shows where you are, where you are going and what you have walked.
-- **One message per event** instead of three. Pickups fold the science note into the same toast,
-  mission sign-offs and the next brief are a single speech, and at most two toasts show at once.
-
-
-- **The greenhouse became a place.** It is now a full interior scene with an airlock transition,
-  six beds, a tank, a seed shelf, three switchable lamp rows, a compost bin, a workbench console
-  and the Martian surface visible through the dome.
-- **Watering is physical.** Fill a can at the tank and carry it to the bed. Compost is scooped by
-  hand. Lamps are switches on the wall, not a slider.
-- **Three new crops** — cherry tomatoes, bush beans and kitchen herbs — joining potatoes, red
-  romaine and dwarf wheat, each with its own growth curve, art at five stages and science note.
-- **Shorter writing throughout.** Most mission briefs are now a single line.
-- **Human touches:** idle animations when you stand still (a stretch, a look at the sky, a glance
-  at the wrist display), passing thoughts in the astronaut's own voice, a flag, a mug, a photo and
-  a crate outside the shelter, stored transmissions that arrive as you pass milestones, and warmer
-  wording everywhere ARES NAV speaks.
-- **Interface polish:** glass panels with gradient borders, hover and press states on everything
-  clickable, larger labelled action buttons, animated stat bars, an animated keycap prompt,
-  consistent spacing, and a phone layout where nothing overlaps anything else.
-
-## What changed in the polish pass
-
-- The day/night cycle is gone. The surface is permanently in warm daylight; stars only appear in
-  the opening, the crash and the ending.
-- The fog-of-war darkness is gone from the world. Nothing on screen is ever dimmed or black.
-  Exploration now lives purely on the map screen and the minimap, where unsurveyed ground is drawn
-  as stylised contour hatching.
-- The fixed 5120 × 3200 world became an **endless streamed surface**: terrain generates in pooled
-  512 px chunks around the camera from a seeded hash, so the screen is always full and the same
-  ground rebuilds identically when you return.
-- New guidance layer: contextual tutorial cards, a screen-edge waypoint arrow with distance, a
-  corner minimap, a clickable map that pins waypoints, a mission-complete banner, items that fly
-  into the inventory, a dialogue log and a save indicator.
-- New comfort settings: interface scale, reduce motion, text speed and colourblind-friendly gauges.
-- Fonts are now system stacks — the game needs no network at all.
-
 ## Features
 
 ### World and exploration
@@ -278,13 +225,16 @@ it was when you step back out.
   finished objective and the next brief arrive as a single piece of speech rather than two.
 - **Stored transmissions** from the relay queue arrive as you pass milestones — fragments of the
   mission that was supposed to happen, read out in the dialogue log.
-- Glass panels with gradient borders, hover and press states on everything clickable, labelled
-  action buttons, stat bars that fill with a travelling sheen, and an animated keycap prompt.
+- Flat panels with one border and one shadow, hover and press states on everything clickable,
+  labelled action buttons, stat bars and an animated keycap prompt.
 - Pause menu, audio mixer and comfort settings: interface scale, reduce motion, screen shake, text
   speed, colourblind-friendly gauges, waypoint arrow and hints.
-- **Autosave to localStorage** every 25 seconds and at every milestone, including a bit-packed copy
-  of the surveyed-ground grid, so Continue drops you exactly where you left off. Saves written by
-  earlier builds still load.
+- **Saving is opt-in.** Nothing about a run is written to the browser until the player ticks
+  "Save my progress in this browser" on the title screen, in Settings, or by asking to save from
+  the pause menu. Once they have, the run autosaves to localStorage every 25 seconds and at every
+  milestone, including a bit-packed copy of the surveyed-ground grid, so Continue drops them
+  exactly where they left off. Turning the setting off again deletes what was stored. Saves
+  written by earlier builds still load.
 
 ### Audio
 - Every sound is synthesised live with the Web Audio API: a wind bed that thickens when you step
@@ -454,11 +404,12 @@ in normal play.
 **No sound.** Browsers block audio until you interact with the page — click once. Check the mixer
 in Settings, and that your system output is not muted.
 
-**Continue is greyed out.** There is no save yet; start a New Mission. Saves live in localStorage
-under `mars-last-signal/save/v1` and can be cleared from Settings.
+**Continue is greyed out.** There is no save yet. Saving is off until you turn it on, so tick
+"Save my progress in this browser" on the title screen before or during a run. Saves live in
+localStorage under `mars-last-signal/save/v1` and can be deleted from Settings.
 
 ---
 
 ## Licence
 
-Code and generated assets: MIT. Built with care for the NASA Space Apps Challenge.
+Code and generated assets: MIT. Built for the NASA Space Apps Challenge.

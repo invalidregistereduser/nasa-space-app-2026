@@ -107,7 +107,10 @@ export function EndingScreen() {
         })}
       </div>
 
-      <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
+      {/* Scroll container outside the centring flex, so tall content is still
+          reachable from the top on a short window. */}
+      <div className="absolute inset-0 z-10 overflow-y-auto overflow-x-hidden">
+        <div className="flex min-h-full flex-col items-center justify-center px-6 py-10 text-center">
         {!showStats ? (
           <Lines name={state.playerName} t={t} />
         ) : (
@@ -115,9 +118,9 @@ export function EndingScreen() {
             <p className="font-display text-xs uppercase tracking-[0.5em] text-nav-300/70">
               To be continued...
             </p>
-            <h2 className="mt-5 font-display text-4xl font-extrabold leading-tight text-white title-glow sm:text-5xl">
-              NASA
-              <span className="block text-mars-400">LAST MISSION</span>
+            <h2 className="title-glow mt-5 font-display text-4xl font-extrabold leading-tight text-white sm:text-5xl">
+              MARS
+              <span className="block text-mars-400">THE LAST SIGNAL</span>
             </h2>
             <p className="mt-4 text-sm text-slate-400">
               Sol {state.sol} · Commander {state.playerName} · ARES HORIZON-7 still transmitting
@@ -144,7 +147,7 @@ export function EndingScreen() {
 
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               <button
-                className="btn btn-primary btn-sheen"
+                className="btn btn-primary"
                 onClick={() => {
                   sfx('ui_click');
                   beginPlaying();
@@ -164,13 +167,9 @@ export function EndingScreen() {
                 Return to title
               </button>
             </div>
-
-            <p className="mt-6 text-[11px] leading-relaxed text-slate-500">
-              Built for the NASA Space Apps Challenge · every sprite, sound and star generated
-              in-browser from code.
-            </p>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

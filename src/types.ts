@@ -191,7 +191,10 @@ export interface Settings {
   uiScale: number;
   /** Swaps resource colours for a deuteranopia-friendly set. */
   colorblind: boolean;
-  /** When false the game never writes a save to this browser. */
+  /**
+   * Opt-in progress saving. False by default: until the player turns this on
+   * the game never writes a run to this browser.
+   */
   saveProgress: boolean;
 }
 

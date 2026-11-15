@@ -1,6 +1,6 @@
 import type { CropSlot, GameState, Settings } from '../types';
 import { deserializeFog, resetFog, serializeFog } from './fog';
-import { createInitialState, getState, setState } from './store';
+import { createInitialState, getState, setSettings, setState } from './store';
 import { bus } from '../game/bus';
 import { MISSIONS } from './missions';
 
@@ -30,11 +30,23 @@ function storage(): Storage | null {
   }
 }
 
+/**
+ * Records the player's answer about keeping a run in this browser and acts on
+ * it straight away: turning it on writes the run as it stands, turning it off
+ * erases whatever was already stored. It starts off, so a first-time player
+ * leaves no trace behind.
+ */
+export function setSaveProgress(on: boolean) {
+  setSettings({ saveProgress: on });
+  saveSettings(getState().settings);
+  if (on) saveGame();
+  else deleteSave();
+}
+
 export function saveGame(): boolean {
   const store = storage();
   if (!store) return false;
   const s = getState();
-  // The player can opt out on the title screen; then nothing is ever written.
   if (!s.settings.saveProgress) return false;
   if (s.phase !== 'playing' && s.phase !== 'ending') return false;
 

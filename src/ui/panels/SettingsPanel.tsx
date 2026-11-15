@@ -4,7 +4,7 @@ import { Icon } from '../components/Icon';
 import { CharacterPreview } from '../canvas/CharacterPreview';
 import { audio, sfx } from '../../audio/AudioEngine';
 import { closePanel, setCharacter, setSettings, useGame } from '../../state/store';
-import { deleteSave, hasSave, saveSettings } from '../../state/save';
+import { deleteSave, hasSave, saveMeta, saveSettings, setSaveProgress } from '../../state/save';
 import { getGame } from '../../game/PhaserGame';
 
 function Slider({
@@ -97,6 +97,7 @@ export function SettingsPanel() {
   const state = useGame();
   const s = state.settings;
   const inGame = state.phase === 'playing';
+  const savedRun = saveMeta();
 
   const update = (patch: Partial<typeof s>) => {
     const next = { ...s, ...patch };
@@ -249,20 +250,44 @@ export function SettingsPanel() {
         )}
       </div>
 
-      {hasSave() && (
-        <div className="mt-5 border-t border-white/10 pt-5">
-          <button
-            className="btn w-full border-alert-600/40 py-2 text-[11px] text-alert-500 hover:border-alert-500"
-            onClick={() => {
-              sfx('warn');
-              deleteSave();
-              closePanel();
-            }}
-          >
-            Delete saved mission
-          </button>
+      <div className="mt-5 border-t border-white/10 pt-5">
+        <p className="label mb-3">Saved progress</p>
+        <div className="grid gap-3 sm:grid-cols-[1.4fr_1fr] sm:items-start">
+          <Toggle
+            label="Save my progress in this browser"
+            description={
+              s.saveProgress
+                ? 'Kept on this device only. Switching this off erases it.'
+                : 'Off. Nothing about your run is written to this browser.'
+            }
+            checked={s.saveProgress}
+            onChange={setSaveProgress}
+          />
+          <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2.5">
+            <p className="text-[11px] leading-relaxed text-slate-500">
+              A save holds the name you typed, where you are on the surface and what you have
+              built. It stays in this browser. It is never uploaded and no one else can read it.
+            </p>
+          </div>
         </div>
-      )}
+        {hasSave() && (
+          <>
+            <p className="mt-3 text-[11px] text-slate-500">
+              Saved run: {savedRun?.playerName || 'Astronaut'}, sol {savedRun?.sol ?? 1}.
+            </p>
+            <button
+              className="btn mt-2 w-full border-alert-600/40 py-2 text-[11px] text-alert-500 hover:border-alert-500"
+              onClick={() => {
+                sfx('warn');
+                deleteSave();
+                closePanel();
+              }}
+            >
+              Delete saved mission
+            </button>
+          </>
+        )}
+      </div>
     </PanelShell>
   );
 }

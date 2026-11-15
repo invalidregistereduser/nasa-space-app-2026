@@ -47,7 +47,6 @@ export function MissionBanner() {
             <span className="label text-[9px] text-slate-500">ARES HORIZON-7</span>
           </div>
         </div>
-        <span className="pointer-events-none absolute inset-0 animate-sheen bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
     </div>
   );

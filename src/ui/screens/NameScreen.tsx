@@ -12,7 +12,7 @@ export function NameScreen() {
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const prompt = useTypewriter('Before we begin, astronaut... what is your name?', {
+  const prompt = useTypewriter('Before we begin, astronaut. What is your name?', {
     speed: 36,
     startDelay: 350,
   });
@@ -43,7 +43,8 @@ export function NameScreen() {
       <Starfield warp={0.08} marsSize={0.14} marsX={0.85} marsY={0.78} />
       <div className="vignette pointer-events-none absolute inset-0" />
 
-      <div className="relative z-10 flex h-full items-center justify-center px-6">
+      <div className="absolute inset-0 z-10 overflow-y-auto overflow-x-hidden">
+        <div className="flex min-h-full items-center justify-center px-6 py-12">
         <div className="w-full max-w-lg">
           <p className="label mb-5 text-nav-300/70">Crew registration</p>
           <h2 className="min-h-[4.5rem] font-display text-2xl leading-snug text-slate-100 sm:text-3xl">
@@ -65,7 +66,6 @@ export function NameScreen() {
                   maxLength={MAX}
                   autoComplete="off"
                   spellCheck={false}
-                  placeholder="ENTER YOUR NAME"
                   className="w-full bg-transparent font-display text-lg tracking-[0.15em] text-white outline-none placeholder:text-slate-600"
                   onChange={(e) => {
                     setValue(e.target.value);
@@ -87,11 +87,12 @@ export function NameScreen() {
                 </p>
               </div>
 
-              <button className="btn btn-primary btn-sheen mt-6 w-full sm:w-auto" onClick={submit}>
+              <button className="btn btn-primary mt-6 w-full sm:w-auto" onClick={submit}>
                 Confirm identity
               </button>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>
