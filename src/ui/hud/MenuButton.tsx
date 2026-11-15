@@ -25,6 +25,8 @@ export function MenuButton() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const carried = Object.values(state.inventory).reduce((a, b) => a + (b ?? 0), 0);
+  // Messages from home go straight to the log; this dot is their only notice.
+  const unread = !!state.flags.logUnread;
 
   useEffect(() => {
     if (!open) return;
@@ -67,6 +69,12 @@ export function MenuButton() {
             {carried}
           </span>
         )}
+        {!open && unread && (
+          <span
+            className="absolute -bottom-1 -right-1 h-2.5 w-2.5 rounded-full border-2 border-space-900 bg-nav-300"
+            title="New in the radio log"
+          />
+        )}
       </button>
 
       {open && (
@@ -85,6 +93,9 @@ export function MenuButton() {
               <span className="flex-1">{e.label}</span>
               {e.panel === 'inventory' && carried > 0 && (
                 <span className="readout text-[10px] text-mars-300">{carried}</span>
+              )}
+              {e.panel === 'log' && unread && (
+                <span className="h-1.5 w-1.5 rounded-full bg-nav-300" aria-label="unread" />
               )}
               <span className="readout text-[9.5px] text-slate-600">{e.key}</span>
             </button>

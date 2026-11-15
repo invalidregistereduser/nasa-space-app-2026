@@ -142,15 +142,13 @@ export interface Toast {
   ttl: number;
 }
 
-export type DialogueTone = 'normal' | 'alert' | 'success';
+export type DialogueTone = 'normal' | 'alert';
 
 export interface DialogueMessage {
   id: number;
   speaker: string;
   lines: string[];
   tone: DialogueTone;
-  /** Optional science footnote displayed in the ARES NAV frame. */
-  science?: string;
 }
 
 export type PanelId =
@@ -202,7 +200,7 @@ export interface MissionDef {
   id: string;
   code: string;
   title: string;
-  /** ARES NAV lines spoken when the mission starts. */
+  /** What ARES NAV says to remind you of the job when you load a save. */
   brief: string[];
   /** Short objective text for the HUD. */
   objective: string;
@@ -217,8 +215,7 @@ export interface MissionDef {
   /** Optional progress counter rendered as a small bar. */
   progressOf?: (s: GameState) => { have: number; need: number } | null;
   isComplete: (s: GameState) => boolean;
-  /** ARES NAV lines spoken on completion. */
-  done: string[];
+  /** Filed in the science log when the mission is completed. */
   science?: string;
 }
 
@@ -264,6 +261,8 @@ export interface GameState {
     prompt: InteractPrompt | null;
     dialogue: DialogueMessage[];
     toasts: Toast[];
+    /** Set for a moment after a mission is completed; the HUD draws a tick. */
+    missionTick: number | null;
     /** Non-null while a scripted in-game moment is playing. */
     cinematic: string | null;
     /** Location or pickup id pinned from the map, overriding the mission target. */

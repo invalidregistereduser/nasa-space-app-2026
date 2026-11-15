@@ -16,17 +16,15 @@ const TONE = {
     text: 'text-alert-500',
     bar: 'from-alert-500/70 to-transparent',
   },
-  success: {
-    ring: 'border-bio-400/50',
-    text: 'text-bio-400',
-    bar: 'from-bio-500/70 to-transparent',
-  },
 };
 
 export function AresDialogue() {
   const state = useGame();
   const message = state.ui.dialogue[0];
   const [lineIndex, setLineIndex] = useState(0);
+  // A toast or the mission tick has the screen for a moment. ARES holds the
+  // line and picks it up again once they have gone.
+  const covered = state.ui.toasts.length > 0 || state.ui.missionTick !== null;
 
   useEffect(() => {
     setLineIndex(0);
@@ -35,7 +33,7 @@ export function AresDialogue() {
   const raw = message?.lines[lineIndex] ?? '';
   const line = fmt(raw, state.playerName);
   const tone = TONE[message?.tone ?? 'normal'];
-  const typed = useTypewriter(line, { speed: textSpeedMs(), sound: true });
+  const typed = useTypewriter(line, { speed: textSpeedMs(), sound: true, enabled: !covered });
 
   const advance = useCallback(() => {
     if (!message) return;
@@ -50,7 +48,7 @@ export function AresDialogue() {
 
   // Space / Enter advance, and lines auto-advance after a readable pause.
   useEffect(() => {
-    if (!message) return;
+    if (!message || covered) return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && /INPUT|TEXTAREA/.test(target.tagName)) return;
@@ -61,11 +59,11 @@ export function AresDialogue() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [message, advance]);
+  }, [message, covered, advance]);
 
   const queued = state.ui.dialogue.length;
   useEffect(() => {
-    if (!message || !typed.done) return;
+    if (!message || covered || !typed.done) return;
     // No rushing when several are queued — they arrive one at a time regardless.
     const delay = 1800 + line.length * 26;
     const id = window.setTimeout(() => {
@@ -73,9 +71,9 @@ export function AresDialogue() {
       else advanceDialogue();
     }, delay);
     return () => window.clearTimeout(id);
-  }, [message, typed.done, line.length, lineIndex, queued]);
+  }, [message, covered, typed.done, line.length, lineIndex, queued]);
 
-  if (!message) return null;
+  if (!message || covered) return null;
 
   return (
     <div className="pointer-events-auto w-[min(34rem,calc(100vw-2rem))] anim-rise">
@@ -105,24 +103,17 @@ export function AresDialogue() {
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <p className={`label text-[9px] ${tone.text}`}>
-                {message.speaker} · Survival guidance
-              </p>
-              <span className="readout text-[9px] text-slate-600">
-                {lineIndex + 1}/{message.lines.length}
-              </span>
+              <p className={`label text-[9px] ${tone.text}`}>{message.speaker}</p>
+              {message.lines.length > 1 && (
+                <span className="readout text-[9px] text-slate-600">
+                  {lineIndex + 1}/{message.lines.length}
+                </span>
+              )}
             </div>
             <p className="mt-1.5 min-h-[2.75rem] text-[13.5px] leading-relaxed text-slate-200">
               {typed.shown}
               {!typed.done && <span className="animate-caret text-nav-300">▌</span>}
             </p>
-
-            {message.science && typed.done && lineIndex === message.lines.length - 1 && (
-              <p className="mt-2 flex gap-2 border-t border-white/5 pt-2 text-[11px] leading-relaxed text-nav-200/70 anim-fade">
-                <Icon name="science" className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                <span>{message.science}</span>
-              </p>
-            )}
 
             <div className="mt-2 flex items-center justify-end">
               <button

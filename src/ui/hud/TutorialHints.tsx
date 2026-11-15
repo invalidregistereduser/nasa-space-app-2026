@@ -1,4 +1,4 @@
-import { useGame } from '../../state/store';
+import { hudBusy, useGame } from '../../state/store';
 
 interface Hint {
   id: string;
@@ -23,6 +23,8 @@ export function TutorialHints() {
   if (state.ui.panel !== 'none' || state.ui.blackout) return null;
   // The interact prompt already says what E does here — never stack a hint on it.
   if (state.ui.prompt) return null;
+  // Same for anything ARES or the suit is saying. The hint can wait.
+  if (hudBusy(state)) return null;
 
   const flags = state.flags;
   const carrying = Object.keys(state.inventory).length > 0;

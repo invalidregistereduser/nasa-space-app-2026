@@ -89,7 +89,7 @@ Netlify, Vercel, an S3 bucket) and the game runs.
 | `M` | Surface map |
 | `N` | Missions and science log |
 | `L` | Radio log |
-| `Space` / `Enter` | Advance dialogue |
+| `Space` / `Enter` | Wake up after the crash; advance dialogue |
 | `Esc` | Pause menu (or close the open panel) |
 | Mouse | Every menu, panel, slider and button; hover a planting bed inside the greenhouse for its status card |
 
@@ -114,8 +114,11 @@ never be truly lost.
 1. **Cinematic intro** — a starfield, a typewriter prologue and the approach to Mars.
 2. **Enter your name.** Everything ARES NAV says afterwards uses it.
 3. **Choose your astronaut** — two suits, identical capability. Changeable later in Settings.
-4. **The crash.** Warning klaxons, atmospheric entry, landing system failure, impact.
-5. **Sol 1.** You wake beside the wreck. ARES NAV boots up and teaches you to walk.
+4. **The crash.** Warning klaxons, atmospheric entry, landing system failure, impact. Then a
+   black screen and one line — *Wake up, astronaut.* — and the game waits until you press
+   `Enter` or `Space` (on a phone, tap).
+5. **Sol 1.** You wake beside the wreck. Nobody talks at you: the mission card in the corner says
+   what to do, and the first thing it asks is that you walk.
 6. **Recover the emergency supply box** near the descent module (oxygen, rations, a repair kit).
 7. **Walk north-west to the broken rover** and read its survey log — this plots the whole debris
    field on your map. Spend your repair kit on the truck parked beside it and you can drive from
@@ -208,23 +211,27 @@ it was when you step back out.
 - A closed water loop that returns 70% of everything you pour.
 
 ### Guidance and interface
-- **ARES NAV**, a holographic suit assistant that briefs every objective, warns about oxygen,
-  explains the science, celebrates your wins, and marks waypoints — without playing the game for you.
-  It also volunteers a hint if an objective stalls, and never freezes you while it talks.
+- **ARES NAV**, a suit assistant that speaks only when it has something to say: an oxygen
+  warning, a word the first time you use the shelter or the greenhouse, a hint if an objective
+  stalls. It marks waypoints, it does not narrate them, and it never freezes you while it talks.
 - **Contextual tutorial cards** introduce one idea at a time — WASD, then E, then the inventory, then
   the map — each shown the first moment it matters and never again once you have done it.
 - **Guidance that cannot be lost:** an on-screen pulsing marker for visible targets, a screen-edge
   arrow with the name and distance for anything off-screen, a corner minimap, and a full map screen
   showing where you are, where you are going, and which ground you have walked.
-- **A HUD of four small things.** One menu button top-left, one mission chip top-right (hover it
-  for the objective and the distance), one oxygen ring bottom-left, the map bottom-right. Pack,
-  map, missions, log and pause all sit behind the menu button, or on their own keys.
+- **A HUD of four small things.** One menu button top-left, one mission card top-right with the
+  mission and its objective (hover it for the distance), one oxygen ring bottom-left, the map
+  bottom-right. Pack, map, missions, log and pause all sit behind the menu button, or on their
+  own keys.
+- **A finished mission is a green tick.** No banner, no speech, no science card: the tick shows
+  for a second and a half and the mission card moves on to the next objective.
 - **One message at a time, and as few as possible.** Nothing is announced that the player can
   already see: walking onto a component collects it silently, arriving somewhere does not pop a
-  card. At most one toast exists at any moment, ARES speaks one short line at a time, and a
-  finished objective and the next brief arrive as a single piece of speech rather than two.
-- **Stored transmissions** from the relay queue arrive as you pass milestones — fragments of the
-  mission that was supposed to happen, read out in the dialogue log.
+  card. A toast, a line from ARES, a passing thought and a tutorial hint never share the screen —
+  whichever is up, the others wait for it or give way.
+- **Stored transmissions** from the relay queue are filed in the radio log (`L`) as you pass
+  milestones — fragments of the mission that was supposed to happen. A dot on the menu button
+  is the only notice; they are there when you have a quiet minute to read them.
 - Flat panels with one border and one shadow, hover and press states on everything clickable,
   labelled action buttons, stat bars and an animated keycap prompt.
 - Pause menu, audio mixer and comfort settings: interface scale, reduce motion, screen shake, text
@@ -331,7 +338,7 @@ src/
 ├── ui/
 │   ├── screens/             title, intro, name entry, character select, crash, game, ending
 │   ├── hud/                 vitals, objective card, ARES NAV dialogue, prompts, toasts,
-│   │                        tutorial cards, minimap, waypoint arrow, mission banner,
+│   │                        tutorial cards, minimap, waypoint arrow, mission tick,
 │   │                        collect effects, save indicator, touch controls, thought
 │   │                        bubble, planting-bed hover card
 │   ├── panels/              inventory, map, nav, greenhouse console, seed shelf,

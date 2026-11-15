@@ -15,8 +15,9 @@ function forTouch(text: string) {
 }
 
 /**
- * Which mission you are on, and nothing else. Rest the pointer on it and the
- * objective and distance drop down underneath.
+ * Which mission you are on and the one thing it asks for. Nothing announces
+ * a new mission any more, so this card is where the player looks to find out
+ * what is next. Rest the pointer on it for the distance to the marker.
  */
 export function ObjectiveCard() {
   const state = useGame();
@@ -43,7 +44,7 @@ export function ObjectiveCard() {
       onMouseLeave={() => setOpen(false)}
     >
       <button
-        className="flex items-center gap-2 rounded-md border border-white/12 bg-space-900/85 py-1.5 pl-1.5 pr-3 text-left transition hover:border-white/25"
+        className="flex w-[15rem] max-w-[64vw] items-start gap-2 rounded-md border border-white/12 bg-space-900/85 py-1.5 pl-1.5 pr-3 text-left transition hover:border-white/25"
         onClick={() => {
           sfx('ui_open');
           openPanel('nav');
@@ -57,23 +58,20 @@ export function ObjectiveCard() {
         >
           {complete ? '✓' : String(step).padStart(2, '0')}
         </span>
-        <span className="max-w-[11rem] truncate font-display text-[10.5px] uppercase tracking-[0.1em] text-slate-200">
-          {title}
+        <span className="min-w-0 flex-1">
+          <span className="block pt-[3px] font-display text-[10.5px] uppercase leading-[1.35] tracking-[0.1em] text-slate-200">
+            {title}
+          </span>
+          <span className="mt-1 block text-[11.5px] leading-snug text-slate-400">{objective}</span>
         </span>
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-[calc(100%+0.3rem)] w-60 rounded-md border border-white/12 bg-space-900/95 px-3 py-2.5 anim-fade">
-          <p className="text-[11.5px] leading-snug text-slate-300">{objective}</p>
-          {live.waypoint && (
-            <p className="mt-1.5 flex items-center gap-1.5 text-[10px] text-slate-500">
-              <Icon name="compass" className="h-3 w-3 shrink-0" />
-              <span className="min-w-0 flex-1 truncate">{live.waypoint.label}</span>
-              <span className="readout tabular-nums">{Math.round(live.waypoint.distance)} m</span>
-            </p>
-          )}
-          <p className="mt-1.5 text-[9.5px] text-slate-600">
-            Mission {step} of {MISSION_COUNT}
+      {open && live.waypoint && (
+        <div className="absolute right-0 top-[calc(100%+0.3rem)] w-[15rem] max-w-[64vw] rounded-md border border-white/12 bg-space-900/95 px-3 py-2 anim-fade">
+          <p className="flex items-center gap-1.5 text-[10px] text-slate-500">
+            <Icon name="compass" className="h-3 w-3 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">{live.waypoint.label}</span>
+            <span className="readout tabular-nums">{Math.round(live.waypoint.distance)} m</span>
           </p>
         </div>
       )}

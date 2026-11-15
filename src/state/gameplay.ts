@@ -13,7 +13,7 @@ import { daylight } from '../util/time';
 import { CROPS, ITEMS } from './items';
 import { MISSIONS } from './missions';
 import { live } from './live';
-import { thought, tickThoughts } from './thoughts';
+import { resetThoughts, thought, tickThoughts } from './thoughts';
 import { deliverTransmissions } from './transmissions';
 import {
   addItem,
@@ -23,13 +23,13 @@ import {
   getState,
   hasItem,
   learn,
-  markSpoken,
   openPanel,
   removeItem,
   say,
   setFlag,
   setState,
   setUI,
+  showMissionTick,
   toast,
 } from './store';
 import { saveGame } from './save';
@@ -78,7 +78,7 @@ function checkStalled(dt: number) {
   }
   if (!s.settings.showHints || s.ui.dialogue.length) return;
   missionIdleSeconds += dt;
-  if (missionIdleSeconds < 105) return;
+  if (missionIdleSeconds < 75) return;
   missionIdleSeconds = 0;
   const mission = MISSIONS[s.missionIndex];
   if (!mission) return;
@@ -237,7 +237,6 @@ function checkWarnings() {
     });
   } else if (o2 <= 14 && !s.flags.warnO2b) {
     setFlag('warnO2b');
-    thought('lowOxygen');
     sfx('alarm');
     say(['Oxygen critical. Move.'], {
       tone: 'alert',
@@ -294,48 +293,43 @@ function triggerBlackout() {
 /* ============================================================
    Missions
    ============================================================ */
-export function startMission(index: number) {
+/** Reminds a returning player what they were in the middle of. */
+function remindMission(index: number) {
   const mission = MISSIONS[index];
   if (!mission) return;
   say(mission.brief, { key: `brief-${mission.id}` });
-  sfx('objective');
   bus.emit('nav:waypoint', { id: mission.waypoint ?? null });
 }
 
-export function checkMissions() {
+/**
+ * Moves on to the next mission if the current one is done, and says so with
+ * a tick. Returns true when that happened, so the caller knows not to put a
+ * message of its own on top of it.
+ */
+export function checkMissions(): boolean {
   const s = getState();
-  if (s.phase !== 'playing') return;
+  if (s.phase !== 'playing') return false;
   const mission = MISSIONS[s.missionIndex];
-  if (!mission) return;
-  if (!mission.isComplete(s)) return;
+  if (!mission || !mission.isComplete(s)) return false;
 
   const nextIndex = s.missionIndex + 1;
   setState({
     missionIndex: nextIndex,
     completedMissions: [...s.completedMissions, mission.id],
   });
-
-  // One piece of speech, not two: the sign-off and the next brief arrive together.
-  const next = MISSIONS[nextIndex];
-  const lines = [...mission.done, ...(next ? next.brief : [])];
-  if (lines.length) {
-    say(lines, { tone: 'success', key: `done-${mission.id}`, science: mission.science });
-  }
-  if (next) markSpoken(`brief-${next.id}`);
   if (mission.science) {
     learn(`mission_${mission.id}`, mission.title, mission.science);
   }
+
+  showMissionTick();
   sfx('objective');
   audio.swell();
-  bus.emit('ui:mission-complete', { code: mission.code, title: mission.title });
   bus.emit('camera:focus', { zoom: 1.08, hold: 500 });
+  bus.emit('nav:waypoint', { id: MISSIONS[nextIndex]?.waypoint ?? null });
 
-  saveGame();
-
-  if (next) {
-    bus.emit('nav:waypoint', { id: next.waypoint ?? null });
-  }
   deliverTransmissions(nextIndex);
+  saveGame();
+  return true;
 }
 
 /* ============================================================
@@ -370,7 +364,6 @@ export function repairRover() {
   removeItem('repair_kit', 1);
   setState({ rover: { ...s.rover, fixed: true } });
   sfx('build');
-  toast({ kind: 'success', title: 'Rover running', ttl: 3200 });
   learn(
     'rover_drive',
     'Pressurised rover',
@@ -404,13 +397,13 @@ export function inspectRover() {
   setFlag('roverSurveyed');
   sfx('discover');
   LOCATIONS.forEach((l) => discover(l.id));
-  toast({ kind: 'success', title: 'Debris field plotted', ttl: 3400 });
   learn(
     'rover_survey',
     'Rover survey',
     'Rovers map terrain with stereo cameras and laser rangefinders, building the elevation models that mission planners use to pick safe routes.',
   );
-  checkMissions();
+  // Read early, before ARES asks for it, the survey still deserves a word.
+  if (!checkMissions()) toast({ kind: 'success', title: 'Debris field plotted', ttl: 3400 });
   saveGame();
 }
 
@@ -421,8 +414,9 @@ export function replenishAtShelter() {
   setState((st) => ({ flags: { ...st.flags, warnO2a: false, warnO2b: false, warnWater: false } }));
   bus.emit('world:refill');
   sfx('power');
-  toast({ kind: 'success', title: topped ? 'Suit topped up' : 'Already full', ttl: 2800 });
-  if (!s.flags.usedShelter) {
+  if (s.flags.usedShelter) {
+    toast({ kind: 'success', title: topped ? 'Suit topped up' : 'Already full', ttl: 2800 });
+  } else {
     setFlag('usedShelter');
     say(
       [
@@ -445,8 +439,7 @@ export function selectBuildSite(siteId: string) {
   if (!site) return;
   setState((s) => ({ greenhouse: { ...s.greenhouse, siteId } }));
   sfx('ui_click');
-  toast({ kind: 'success', title: `Site set: ${site.name}`, ttl: 3000 });
-  checkMissions();
+  if (!checkMissions()) toast({ kind: 'success', title: `Site set: ${site.name}`, ttl: 3000 });
   saveGame();
 }
 
@@ -466,7 +459,6 @@ export function buildGreenhouse() {
     greenhouse: { ...st.greenhouse, built: true, charge: 62 },
   }));
   closePanel();
-  thought('greenhouseBuilt');
   bus.emit('world:build-start', { siteId: s.greenhouse.siteId });
   sfx('build');
   audio.swell();
@@ -475,6 +467,8 @@ export function buildGreenhouse() {
     'Pressurised agriculture',
     'A Mars greenhouse is a pressure vessel first and a garden second: it holds about one bar of air against a near-vacuum, filters UV, and keeps a stable temperature through a 100 °C daily swing.',
   );
+  checkMissions();
+  thought('greenhouseBuilt');
   saveGame();
 }
 
@@ -491,16 +485,16 @@ export function ghActivatePower() {
   setState((st) => ({ greenhouse: { ...st.greenhouse, power: true } }));
   sfx('power');
   bus.emit('world:build-stage', { stage: 4 });
+  const advanced = checkMissions();
   if (!s.flags.ghPowered) {
     setFlag('ghPowered');
-    say(['Power up. Lamps are on the battery.'], { key: 'gh-power' });
+    if (!advanced) say(['Power up. Lamps are on the battery.'], { key: 'gh-power' });
     learn(
       'solar',
       'Power on Mars',
       'Sunlight at Mars delivers roughly 590 W/m² at the top of the atmosphere against 1361 W/m² at Earth, so arrays are oversized and paired with batteries for the night.',
     );
   }
-  checkMissions();
   saveGame();
 }
 
@@ -525,13 +519,12 @@ export function ghConnectWater() {
   removeItem('water_recycler', 1);
   setState((st) => ({ greenhouse: { ...st.greenhouse, waterConnected: true } }));
   sfx('water');
-  say(['Water loop closed. Nothing is wasted.'], { key: 'gh-water' });
   learn(
     'water_loop',
     'Closing the water loop',
     'Plants transpire almost all the water they are given. A condenser above the canopy recovers it, which is why a sealed greenhouse uses a fraction of the water an open field would.',
   );
-  checkMissions();
+  if (!checkMissions()) say(['Water loop closed. Nothing is wasted.'], { key: 'gh-water' });
   saveGame();
 }
 
@@ -544,19 +537,16 @@ export function ghPrepareTrays() {
   }
   setState((st) => ({ greenhouse: { ...st.greenhouse, containersReady: true } }));
   sfx('plant');
-  say(
-    [
-      'Trays conditioned. The regolith has been rinsed of perchlorate salts and blended with nutrients.',
-      'It is not Earth soil, {name}, but it will hold a root.',
-    ],
-    { key: 'gh-trays' },
-  );
   learn(
     'perchlorate',
     'Washing the regolith',
     'Martian soil holds roughly 0.5-1% perchlorate salts, which are toxic to humans and most plants. Rinsing with water and biological treatment is the leading plan to make it usable.',
   );
-  checkMissions();
+  if (!checkMissions()) {
+    say(['Trays ready. It is not Earth soil, {name}, but it will hold a root.'], {
+      key: 'gh-trays',
+    });
+  }
   saveGame();
 }
 
@@ -582,11 +572,13 @@ export function ghPlant(slotIndex: number, crop: CropId) {
   setState({ greenhouse: { ...gh, slots } });
   sfx('plant');
   bus.emit('gh:planted', { slot: slotIndex });
-  if (gh.harvests === 0 && !gh.slots.some((sl) => sl.crop)) thought('firstPlant');
   bus.emit('world:crop-stage', { stage: 1 });
-  toast({ kind: 'success', title: `${CROPS[crop].name} planted`, ttl: 2600 });
   learn(`crop_${crop}`, CROPS[crop].name, CROPS[crop].science);
-  checkMissions();
+  const veryFirst = gh.harvests === 0 && !gh.slots.some((sl) => sl.crop);
+  if (!checkMissions() && !veryFirst) {
+    toast({ kind: 'success', title: `${CROPS[crop].name} planted`, ttl: 2600 });
+  }
+  if (veryFirst) thought('firstPlant');
   saveGame();
 }
 
@@ -706,16 +698,18 @@ export function ghHarvest(slotIndex: number) {
   sfx('harvest');
   audio.swell();
   bus.emit('gh:harvested', { slot: slotIndex });
-  thought(gh.harvests === 0 ? 'firstHarvest' : 'harvest');
   bus.emit('camera:focus', { zoom: 1.14, hold: 700 });
   bus.emit('world:crop-stage', { stage: 0 });
-  toast({
-    kind: 'success',
-    title: `Harvested ${def.name} ×${amount}`,
-    text: gh.harvests === 0 ? 'New seed types unlocked in the vault' : undefined,
-    ttl: 5200,
-  });
-  checkMissions();
+  const first = gh.harvests === 0;
+  if (!checkMissions()) {
+    toast({
+      kind: 'success',
+      title: `Harvested ${def.name} ×${amount}`,
+      text: first ? 'New seeds on the shelf' : undefined,
+      ttl: first ? 4200 : 3000,
+    });
+  }
+  if (first) thought('firstHarvest');
   saveGame();
 }
 
@@ -803,7 +797,6 @@ export function repairTransmitter() {
   if (!canRepairTransmitter(s) || s.flags.transmitted) return;
   TRANSMITTER_REQUIREMENTS.forEach((r) => removeItem(r.id, 1));
   setFlag('transmitted');
-  thought('transmit');
   closePanel();
   sfx('transmit');
   audio.swell();
@@ -813,6 +806,8 @@ export function repairTransmitter() {
     'Talking to Earth',
     'A signal from Mars takes 5 to 20 minutes to reach Earth. Real-time conversation is impossible — crews send messages and wait.',
   );
+  checkMissions();
+  thought('transmit');
   saveGame();
   window.setTimeout(() => {
     setState({ phase: 'ending' });
@@ -826,14 +821,14 @@ export function repairTransmitter() {
 export function beginPlaying() {
   setState({ phase: 'playing' });
   resetTickState();
+  resetThoughts();
   audio.unlock();
   audio.startAmbient();
   const s = getState();
-  if (s.missionIndex === 0 && !s.completedMissions.length) {
-    window.setTimeout(() => startMission(0), 1200);
-  } else {
-    window.setTimeout(() => startMission(s.missionIndex), 1200);
-  }
+  // A fresh run starts in silence: the astronaut has only just opened their
+  // eyes. Somebody coming back to a save gets one line on where they were.
+  const returning = s.missionIndex > 0 || s.elapsed > 0;
+  if (returning) window.setTimeout(() => remindMission(s.missionIndex), 1200);
 }
 
 export function openGreenhousePanel() {
